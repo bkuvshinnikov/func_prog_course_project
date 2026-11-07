@@ -1,0 +1,132 @@
+:root {
+  color-scheme: light;
+  --ink: #20332b;
+  --muted: #7c8981;
+  --green: #244a3a;
+  --green-soft: #e9f1e9;
+  --line: #e9ece7;
+  --paper: #fbfcf9;
+  --white: #ffffff;
+  --orange: #ed8a62;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+.topbar {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1260px;
+  padding: 0 30px;
+  margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font: 800 21px 'Manrope', sans-serif; letter-spacing: -1px; }
+.brand-mark { display: grid; place-items: center; width: 30px; height: 30px; color: #fff; background: #527b5f; border-radius: 10px 10px 10px 3px; font: 800 18px 'Manrope', sans-serif; }
+.main-nav { display: flex; align-items: center; gap: 38px; height: 100%; }
+.nav-link { height: 100%; display: flex; align-items: center; color: #7c8981; font-size: 13px; font-weight: 600; position: relative; }
+.nav-link.active { color: var(--green); }
+.nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; border-radius: 4px 4px 0 0; background: #6e9475; }
+.profile { display: grid; place-items: center; width: 37px; height: 37px; color: #345540; background: #e7eee2; border-radius: 50%; font-weight: 700; font-size: 13px; }
+.page-wrap { max-width: 1200px; padding: 0 30px 35px; margin: 0 auto; }
+.hero { min-height: 286px; border-radius: 20px; padding: 43px 52px; position: relative; overflow: hidden; display: flex; align-items: center; background: #244a3a; color: #fff; }
+.hero-copy { width: 58%; max-width: 570px; position: relative; z-index: 1; }
+.eyebrow { margin: 0 0 12px; color: #c0d3b5; font-size: 10px; letter-spacing: 1.6px; font-weight: 700; }
+.hero h1 { margin: 0; max-width: 535px; font: 700 34px/1.22 'Manrope', sans-serif; letter-spacing: -1.3px; }
+.hero-description { max-width: 430px; margin: 13px 0 21px; color: #d2dfd2; font-size: 13px; line-height: 1.7; }
+.hero-button { display: inline-flex; gap: 18px; align-items: center; padding: 12px 16px; border-radius: 9px; background: #e5ad73; color: #263d30; font-size: 12px; font-weight: 700; }
+.hero-art { position: absolute; width: 390px; height: 286px; right: 24px; top: 0; }
+.sun { position: absolute; width: 135px; height: 135px; right: 110px; top: 35px; background: #e9bf7e; border-radius: 50%; opacity: .95; }
+.plate { position: absolute; width: 205px; height: 205px; right: 76px; top: 74px; border-radius: 50%; background: #f4efe2; border: 12px solid #dfb17c; box-shadow: 0 14px 35px #112c2166; }
+.plate::before { content: '🥑'; position: absolute; font-size: 69px; left: 46px; top: 39px; transform: rotate(-14deg); }
+.plate::after { content: '✳'; position: absolute; color: #799b65; font-size: 67px; right: 25px; bottom: 23px; transform: rotate(18deg); }
+.leaf { position: absolute; color: #a8c58f; font-size: 37px; }
+.leaf-one { right: 285px; top: 53px; transform: rotate(-18deg); }
+.leaf-two { right: 39px; top: 92px; color: #ed916a; font-size: 27px; }
+.art-caption { position: absolute; right: 20px; bottom: 20px; color: #d6e3d6; font: italic 11px 'Manrope', sans-serif; }
+.welcome-row { display: flex; justify-content: space-between; align-items: end; margin: 35px 0 18px; }
+.dark-eyebrow { color: #829788; margin-bottom: 7px; }
+h2 { margin: 0; font: 700 22px 'Manrope', sans-serif; letter-spacing: -.6px; }
+.date-label { margin: 0 0 3px; color: var(--muted); font-size: 12px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.stat-card { min-height: 135px; padding: 17px 19px; border: 1px solid var(--line); border-radius: 14px; background: #fff; position: relative; }
+.stat-icon { position: absolute; right: 18px; top: 17px; display: grid; place-items: center; width: 33px; height: 33px; border-radius: 10px; font-size: 17px; }
+.green-icon { color: #527b5f; background: #e9f1e9; }
+.peach-icon { color: #c8714c; background: #fff0e8; }
+.yellow-icon { color: #a67a38; background: #fbf2df; }
+.stat-label { margin: 1px 0 10px; color: #7e8d83; font-size: 11px; font-weight: 600; }
+.stat-value { margin: 0; color: #263d30; font: 700 26px 'Manrope', sans-serif; letter-spacing: -.8px; }
+.stat-note { margin: 3px 0 0; color: #a0aaa2; font-size: 10px; }
+.content-grid { display: grid; grid-template-columns: .91fr 1.09fr; gap: 16px; margin-top: 17px; }
+.panel { padding: 21px 21px 17px; border: 1px solid var(--line); border-radius: 15px; background: #fff; min-width: 0; }
+.panel-heading { display: flex; align-items: end; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.panel-heading h2 { font-size: 19px; }
+.text-link { color: #5e8266; font-size: 10px; font-weight: 700; white-space: nowrap; padding-bottom: 3px; }
+.pantry-list { list-style: none; margin: 0; padding: 0; }
+.pantry-item { display: flex; align-items: center; min-height: 57px; border-bottom: 1px solid #f0f2ef; gap: 11px; }
+.food-emoji { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 11px; background: #f5f6ee; font-size: 19px; }
+.food-info { flex: 1; min-width: 0; }
+.food-name { margin: 0; color: #35463b; font-size: 11px; font-weight: 700; }
+.food-amount { margin: 3px 0 0; color: #a0aaa2; font-size: 9px; }
+.expiry-info { display: flex; align-items: end; flex-direction: column; gap: 3px; }
+.expiry-pill { padding: 4px 8px; border-radius: 20px; font-size: 9px; font-weight: 700; }
+.expiry-pill.urgent { color: #ae603e; background: #fff0e8; }
+.expiry-pill.soon { color: #9a793d; background: #fbf3df; }
+.expiry-pill.fresh { color: #5f8267; background: #edf4ec; }
+.expiry-caption { color: #a0aaa2; font-size: 8px; }
+.add-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: #5e8266; font-size: 10px; font-weight: 700; }
+.plus-icon { display: grid; place-items: center; width: 20px; height: 20px; border: 1px dashed #a1b8a3; border-radius: 7px; font-size: 14px; }
+.recipe-list { display: grid; gap: 8px; }
+.recipe-card { min-height: 78px; display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid #f0f2ef; border-radius: 11px; }
+.recipe-visual { display: grid; place-items: center; flex: 0 0 57px; height: 57px; border-radius: 9px; font-size: 27px; }
+.recipe-visual.mint { background: #edf4e7; }
+.recipe-visual.lavender { background: #f1eef8; }
+.recipe-visual.peach { background: #fff0e8; }
+.recipe-info { min-width: 0; flex: 1; position: relative; }
+.recipe-match { float: right; margin: 2px 0 0 5px; color: #668a6c; font-size: 8px; font-weight: 700; }
+.recipe-info h3 { margin: 0; color: #33453a; font: 700 11px 'Manrope', sans-serif; }
+.recipe-description { margin: 4px 0; color: #89958c; font-size: 9px; }
+.recipe-duration { margin: 0; color: #9ba69e; font-size: 8px; }
+.footer { display: flex; justify-content: space-between; padding: 18px 2px 0; color: #9aa69d; font-size: 9px; }
+.footer span:first-child { color: #5e8266; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .topbar { height: 65px; padding: 0 18px; }
+  .main-nav { gap: 14px; }
+  .nav-link { font-size: 10px; }
+  .page-wrap { padding: 0 16px 24px; }
+  .hero { min-height: 300px; padding: 30px 25px; align-items: start; }
+  .hero-copy { width: 100%; }
+  .hero h1 { max-width: 400px; font-size: 28px; }
+  .hero-description { max-width: 330px; }
+  .hero-art { opacity: .23; right: -90px; top: 78px; }
+  .welcome-row { margin-top: 27px; }
+  .stats-grid { gap: 8px; }
+  .stat-card { min-height: 125px; padding: 14px 12px; }
+  .stat-icon { right: 10px; top: 10px; width: 27px; height: 27px; }
+  .stat-label { max-width: 75px; line-height: 1.4; }
+  .stat-value { font-size: 22px; }
+  .stat-note { line-height: 1.4; }
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .brand { font-size: 17px; }
+  .brand-mark { width: 27px; height: 27px; }
+  .main-nav { gap: 9px; }
+  .nav-link { font-size: 9px; }
+  .profile { width: 30px; height: 30px; }
+  .hero h1 { font-size: 25px; }
+  .welcome-row { align-items: start; flex-direction: column; gap: 7px; }
+  h2 { font-size: 20px; }
+  .panel { padding: 17px 14px; }
+  .panel-heading h2 { font-size: 17px; }
+}
