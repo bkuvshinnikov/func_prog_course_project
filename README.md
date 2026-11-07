@@ -17,7 +17,7 @@ cabal run
 
 Then open <http://localhost:3000>.
 
-Copy `.env.example` to `.env` in the project root and replace its placeholders with the Atlas connection string and your database user's credentials. The `.env` file is ignored by Git. Never commit it or share its contents. The app uses SCRAM-SHA-256 authentication and verifies Atlas TLS certificates against the operating system certificate store. Pantry documents are stored in the `pantry` collection in the database named by the URI, or `freshstart` if the URI does not specify a database. Initial sample items are added only when this collection is empty.
+Copy `.env.example` to `.env` in the project root and replace its placeholders with the Atlas connection string and your database user's credentials. The `.env` file is ignored by Git. Never commit it or share its contents. The app uses SCRAM-SHA-1 authentication and verifies Atlas TLS certificates against the operating system certificate store. The vendored driver's SCRAM-SHA-256 path failed to authenticate against the configured Atlas user, while SCRAM-SHA-1 succeeded. Pantry documents are stored in the `pantry` collection in the database named by the URI, or `freshstart` if the URI does not specify a database. Initial sample items are added only when this collection is empty.
 
 The MongoDB Haskell driver source is vendored under `vendor/mongoDB` and locally patched to verify TLS server certificates. Its upstream Apache-2.0 license is included there.
 

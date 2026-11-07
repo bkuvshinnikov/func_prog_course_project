@@ -299,8 +299,12 @@ authSCRAMSHA1 = authSCRAMWith SHA1
 authSCRAMSHA256 :: MonadIO m => Username -> Password -> Action m Bool
 authSCRAMSHA256 = authSCRAMWith SHA256
 
-toAuthResult :: Functor m => ExceptT String (Action m) () -> Action m Bool
-toAuthResult = fmap (either (const False) (const True)) . runExceptT
+toAuthResult :: MonadIO m => ExceptT String (Action m) () -> Action m Bool
+toAuthResult action = do
+    result <- runExceptT action
+    case result of
+      Left phase -> liftIO (putStrLn $ "MongoDB SCRAM authentication failed during " ++ phase ++ ".") >> return False
+      Right () -> return True
 
 -- | It should technically perform SASLprep, but the implementation is currently id
 saslprep :: Text -> Text
@@ -322,14 +326,14 @@ authSCRAMWith algo un pw = toAuthResult $ do
           ]
     server1 <- lift $ runCommand client1
 
-    shortcircuit (true1 "ok" server1) (show server1)
+    shortcircuit (true1 "ok" server1) "the server challenge"
     let serverPayload1 = B64.decodeLenient . B.pack . at "payload" $ server1
     let serverData1 = parseSCRAM serverPayload1
     let iterations = read . B.unpack $ Map.findWithDefault "1" "i" serverData1
     let salt = B64.decodeLenient $ Map.findWithDefault "" "s" serverData1
     let snonce = Map.findWithDefault "" "r" serverData1
 
-    shortcircuit (B.isInfixOf nonce snonce) "nonce"
+    shortcircuit (B.isInfixOf nonce snonce) "the server nonce check"
     let withoutProof = B.concat [B.pack "c=biws,r=", snonce]
     let digest = case algo of
           SHA1 -> B16.encode $ MD5.hash $ B.pack $ T.unpack un ++ ":mongo:" ++ T.unpack pw
@@ -348,7 +352,7 @@ authSCRAMWith algo un pw = toAuthResult $ do
             , "payload" =: B.unpack (B64.encode clientFinal)
             ]
     server2 <- lift $ runCommand client2
-    shortcircuit (true1 "ok" server2) (show server2)
+    shortcircuit (true1 "ok" server2) "the client proof"
 
     let serverKey = hmac saltedPass (B.pack "Server Key")
     let serverSig = B64.encode $ hmac serverKey authMsg
@@ -356,7 +360,7 @@ authSCRAMWith algo un pw = toAuthResult $ do
     let serverData2 = parseSCRAM serverPayload2
     let serverSigComp = Map.findWithDefault "" "v" serverData2
 
-    shortcircuit (serverSig == serverSigComp) "server signature does not match"
+    shortcircuit (serverSig == serverSigComp) "the server signature check"
     if true1 "done" server2
       then return ()
       else do
@@ -364,7 +368,7 @@ authSCRAMWith algo un pw = toAuthResult $ do
                             , "conversationId" =: (at "conversationId" server1 :: Int)
                             , "payload" =: String ""]
         server3 <- lift $ runCommand client2Step2
-        shortcircuit (true1 "ok" server3) "server3"
+        shortcircuit (true1 "ok" server3) "the final exchange"
 
 shortcircuit :: Monad m => Bool -> String -> ExceptT String m ()
 shortcircuit True _ = pure ()

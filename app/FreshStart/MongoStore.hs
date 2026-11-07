@@ -61,7 +61,7 @@ addPantryItem store item = case store of
 connectAndSeed :: ReplicaSet -> MongoConfig -> [PantryItem] -> IO PantryStore
 connectAndSeed replicaSet config initialItems = do
   pipe <- primary replicaSet
-  authenticated <- access pipe master "admin" (authSCRAMSHA256 (mongoUsername config) (mongoPassword config))
+  authenticated <- access pipe master "admin" (authSCRAMSHA1 (mongoUsername config) (mongoPassword config))
   unless authenticated (ioError (userError "MongoDB authentication failed."))
   items <- loadItems pipe (configDatabase config)
   when (null items) (mapM_ (saveItem pipe (configDatabase config)) initialItems)
