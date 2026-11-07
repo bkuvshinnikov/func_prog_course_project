@@ -2,11 +2,12 @@
 
 module Main where
 
+import Control.Exception (bracket)
 import Control.Monad.IO.Class (liftIO)
-import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import FreshStart.Domain
+import FreshStart.MongoStore
 import Lucid
 import Network.HTTP.Types.Status (status400)
 import Web.Scotty (file, formParam, get, html, post, redirect, scotty, setHeader, status)
@@ -27,11 +28,10 @@ recipes =
   ]
 
 main :: IO ()
-main = do
-  pantryRef <- newIORef samplePantryItems
+main = bracket (openPantryStore samplePantryItems) closePantryStore $ \pantryStore ->
   scotty 3000 $ do
     get "/" $ do
-      currentPantry <- liftIO (readIORef pantryRef)
+      currentPantry <- liftIO (readPantryItems pantryStore)
       html (renderText (homePage currentPantry Nothing))
     post "/pantry" $ do
       name <- formParam "name"
@@ -39,11 +39,11 @@ main = do
       daysLeft <- formParam "daysLeft"
       case validatePantryItem name amount daysLeft of
         Left message -> do
-          currentPantry <- liftIO (readIORef pantryRef)
+          currentPantry <- liftIO (readPantryItems pantryStore)
           status status400
           html (renderText (homePage currentPantry (Just message)))
         Right item -> do
-          liftIO (modifyIORef' pantryRef (item :))
+          liftIO (addPantryItem pantryStore item)
           redirect "/"
     get "/style.css" $ do
       setHeader "Content-Type" "text/css; charset=utf-8"
