@@ -79,6 +79,7 @@ h2 { margin: 0; font: 700 22px 'Manrope', sans-serif; letter-spacing: -.6px; }
 .expiry-info { display: flex; align-items: end; flex-direction: column; gap: 3px; }
 .expiry-pill { padding: 4px 8px; border-radius: 20px; font-size: 9px; font-weight: 700; }
 .expiry-pill.urgent { color: #ae603e; background: #fff0e8; }
+.expiry-pill.expired { color: #fff; background: #b84f3f; }
 .expiry-pill.soon { color: #9a793d; background: #fbf3df; }
 .expiry-pill.fresh { color: #5f8267; background: #edf4ec; }
 .expiry-caption { color: #a0aaa2; font-size: 8px; }

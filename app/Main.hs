@@ -3,6 +3,8 @@
 module Main where
 
 import Data.Text (Text)
+import qualified Data.Text as Text
+import FreshStart.Domain
 import Lucid
 import Web.Scotty (file, get, html, scotty, setHeader)
 
@@ -10,16 +12,22 @@ data PantryItem = PantryItem
   { itemEmoji :: Text
   , itemName :: Text
   , itemAmount :: Text
-  , itemExpiry :: Text
-  , itemUrgency :: Text
+  , itemDaysLeft :: Int
   }
 
 pantryItems :: [PantryItem]
 pantryItems =
-  [ PantryItem "🥑" "Avocado" "2 pieces" "Today" "urgent"
-  , PantryItem "🥬" "Baby spinach" "120 g" "Tomorrow" "soon"
-  , PantryItem "🍅" "Cherry tomatoes" "1 cup" "In 3 days" "fresh"
-  , PantryItem "🥛" "Greek yogurt" "350 g" "In 5 days" "fresh"
+  [ PantryItem "🥑" "Avocado" "2 pieces" 0
+  , PantryItem "🥬" "Baby spinach" "120 g" 1
+  , PantryItem "🍅" "Cherry tomatoes" "1 cup" 3
+  , PantryItem "🥛" "Greek yogurt" "350 g" 5
+  ]
+
+recipes :: [Recipe]
+recipes =
+  [ Recipe "Creamy avocado toast" "Uses your avocado" "15 min" ["Avocado", "Bread", "Lemon"] "mint"
+  , Recipe "Green garden omelette" "Spinach + pantry staples" "20 min" ["Baby spinach", "Eggs", "Feta"] "lavender"
+  , Recipe "Tomato yogurt bowl" "Cherry tomatoes + yogurt" "10 min" ["Cherry tomatoes", "Greek yogurt"] "peach"
   ]
 
 main :: IO ()
@@ -81,7 +89,8 @@ homePage = do
           article_ [class_ "stat-card"] $ do
             div_ [class_ "stat-icon peach-icon"] "◷"
             p_ [class_ "stat-label"] "Use soon"
-            p_ [class_ "stat-value"] "3"
+            p_ [class_ "stat-value"] $
+              toHtml (Text.pack (show (countItemsNeedingAttention (map itemDaysLeft pantryItems))))
             p_ [class_ "stat-note"] "ingredients need attention"
           article_ [class_ "stat-card impact-card"] $ do
             div_ [class_ "stat-icon yellow-icon"] "✳"
@@ -107,10 +116,9 @@ homePage = do
                 p_ [class_ "eyebrow dark-eyebrow"] "MADE FOR YOUR INGREDIENTS"
                 h2_ "A few good ideas"
               a_ [class_ "text-link", href_ "#all-recipes"] "All recipes →"
-            div_ [class_ "recipe-list"] $ do
-              recipeCard "🥑" "Creamy avocado toast" "Uses your avocado" "15 min" "94% match" "mint"
-              recipeCard "🥬" "Green garden omelette" "Spinach + pantry staples" "20 min" "82% match" "lavender"
-              recipeCard "🍅" "Tomato yogurt bowl" "Cherry tomatoes + yogurt" "10 min" "76% match" "peach"
+            let availableIngredients = map itemName pantryItems
+            div_ [class_ "recipe-list"] $
+              mapM_ (recipeCard availableIngredients) (rankRecipes availableIngredients recipes)
 
         footer_ [class_ "footer"] $ do
           span_ "FreshStart"
@@ -124,17 +132,27 @@ renderPantryItem item =
       p_ [class_ "food-name"] (toHtml (itemName item))
       p_ [class_ "food-amount"] (toHtml (itemAmount item))
     div_ [class_ "expiry-info"] $ do
-      span_ [class_ ("expiry-pill " <> itemUrgency item)] (toHtml (itemExpiry item))
+      span_
+        [class_ ("expiry-pill " <> urgencyClass status)]
+        (toHtml (expiryLabel (itemDaysLeft item)))
       span_ [class_ "expiry-caption"] "best before"
+  where
+    status = expiryStatus (itemDaysLeft item)
 
-recipeCard :: Text -> Text -> Text -> Text -> Text -> Text -> Html ()
-recipeCard emoji name description duration match style =
+recipeCard :: [Text] -> Recipe -> Html ()
+recipeCard available recipe =
   article_ [class_ "recipe-card"] $ do
-    div_ [class_ ("recipe-visual " <> style)] (toHtml emoji)
+    div_ [class_ ("recipe-visual " <> recipeStyle recipe)] (toHtml (recipeIcon recipe))
     div_ [class_ "recipe-info"] $ do
-      p_ [class_ "recipe-match"] (toHtml match)
-      h3_ (toHtml name)
-      p_ [class_ "recipe-description"] (toHtml description)
+      p_ [class_ "recipe-match"] (toHtml (Text.pack (show (recipeMatchPercent available recipe)) <> "% match"))
+      h3_ (toHtml (recipeName recipe))
+      p_ [class_ "recipe-description"] (toHtml (recipeDescription recipe))
       p_ [class_ "recipe-duration"] $ do
         span_ "◷ "
-        toHtml duration
+        toHtml (recipeDuration recipe)
+
+recipeIcon :: Recipe -> Text
+recipeIcon recipe
+  | recipeStyle recipe == "mint" = "🥑"
+  | recipeStyle recipe == "lavender" = "🥬"
+  | otherwise = "🍅"
