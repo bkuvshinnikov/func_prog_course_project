@@ -37,7 +37,8 @@ data Recipe = Recipe
   deriving (Eq, Show)
 
 data PantryItem = PantryItem
-  { itemEmoji :: Text
+  { itemId :: Text
+  , itemEmoji :: Text
   , itemName :: Text
   , itemAmount :: Text
   , itemDaysLeft :: Int
@@ -52,7 +53,7 @@ validatePantryItem rawName rawAmount rawDaysLeft
       Nothing -> Left "Enter the number of days until the best-before date."
       Just daysLeft
         | daysLeft < 0 -> Left "Days until the best-before date cannot be negative."
-        | otherwise -> Right (PantryItem "🥗" name amount daysLeft)
+        | otherwise -> Right (PantryItem "" "🥗" name amount daysLeft)
   where
     name = Text.strip rawName
     amount = Text.strip rawAmount

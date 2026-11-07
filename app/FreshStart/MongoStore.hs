@@ -6,6 +6,8 @@ module FreshStart.MongoStore
   , closePantryStore
   , readPantryItems
   , addPantryItem
+  , updatePantryItem
+  , deletePantryItem
   ) where
 
 import Control.Exception (bracketOnError)
@@ -55,8 +57,40 @@ readPantryItems store = case store of
 
 addPantryItem :: PantryStore -> PantryItem -> IO ()
 addPantryItem store item = case store of
-  MemoryStore items -> modifyIORef' items (item :)
+  MemoryStore items -> do
+    identifier <- newItemId
+    modifyIORef' items (item {itemId = identifier} :)
   AtlasStore _ pipe database -> saveItem pipe database item
+
+updatePantryItem :: PantryStore -> PantryItem -> IO Bool
+updatePantryItem store item = case store of
+  MemoryStore items -> do
+    current <- readIORef items
+    let exists = any ((== itemId item) . itemId) current
+    when exists (modifyIORef' items (map (replaceIfMatches item)))
+    pure exists
+  AtlasStore _ pipe database -> do
+    access pipe master database $ modify (select ["appId" =: itemId item] "pantry")
+      [ "$set" =: [ "emoji" =: itemEmoji item
+                  , "name" =: itemName item
+                  , "amount" =: itemAmount item
+                  , "daysLeft" =: itemDaysLeft item
+                  ]
+      ]
+    pure True
+
+deletePantryItem :: PantryStore -> Text -> IO ()
+deletePantryItem store identifier = case store of
+  MemoryStore items -> modifyIORef' items (filter ((/= identifier) . itemId))
+  AtlasStore _ pipe database -> access pipe master database (deleteOne (select ["appId" =: identifier] "pantry"))
+
+replaceIfMatches :: PantryItem -> PantryItem -> PantryItem
+replaceIfMatches replacement current
+  | itemId replacement == itemId current = replacement
+  | otherwise = current
+
+newItemId :: IO Text
+newItemId = Text.pack . show <$> genObjectId
 
 connectAndSeed :: ReplicaSet -> MongoConfig -> [PantryItem] -> IO PantryStore
 connectAndSeed replicaSet config initialItems = do
@@ -69,13 +103,29 @@ connectAndSeed replicaSet config initialItems = do
 
 loadItems :: Pipe -> Text -> IO [PantryItem]
 loadItems pipe database = do
+  legacyDocuments <- access pipe master database
+    (rest =<< find (select ["appId" =: ["$exists" =: False]] "pantry"))
+  mapM_ (migrateLegacyDocument pipe database) legacyDocuments
   documents <- access pipe master database (rest =<< find (select [] "pantry"))
   pure (map documentToPantryItem documents)
 
+migrateLegacyDocument :: Pipe -> Text -> Document -> IO ()
+migrateLegacyDocument pipe database document = do
+  identifier <- newItemId
+  let documentObjectId = "_id" `at` document :: ObjectId
+      documentSelector =
+        [ "_id" =: documentObjectId
+        , "appId" =: ["$exists" =: False]
+        ]
+  access pipe master database $ modify (select documentSelector "pantry")
+    ["$set" =: ["appId" =: identifier]]
+
 saveItem :: Pipe -> Text -> PantryItem -> IO ()
 saveItem pipe database item = do
+  identifier <- newItemId
   _ <- access pipe master database $ insert_ "pantry"
-    [ "emoji" =: itemEmoji item
+    [ "appId" =: identifier
+    , "emoji" =: itemEmoji item
     , "name" =: itemName item
     , "amount" =: itemAmount item
     , "daysLeft" =: itemDaysLeft item
@@ -84,7 +134,8 @@ saveItem pipe database item = do
 
 documentToPantryItem :: Document -> PantryItem
 documentToPantryItem document = PantryItem
-  { itemEmoji = "emoji" `at` document
+  { itemId = "appId" `at` document
+  , itemEmoji = "emoji" `at` document
   , itemName = "name" `at` document
   , itemAmount = "amount" `at` document
   , itemDaysLeft = "daysLeft" `at` document
