@@ -96,6 +96,15 @@ h2 { margin: 0; font: 700 22px 'Manrope', sans-serif; letter-spacing: -.6px; }
 .recipe-info h3 { margin: 0; color: #33453a; font: 700 11px 'Manrope', sans-serif; }
 .recipe-description { margin: 4px 0; color: #89958c; font-size: 9px; }
 .recipe-duration { margin: 0; color: #9ba69e; font-size: 8px; }
+.add-panel { margin-top: 16px; }
+.add-form { display: grid; grid-template-columns: 1.2fr 1fr .8fr auto; align-items: end; gap: 12px; }
+.form-field { display: grid; gap: 6px; }
+.form-field label { color: #63756a; font-size: 10px; font-weight: 700; }
+.form-field input { width: 100%; height: 39px; padding: 0 11px; border: 1px solid #e3e9e2; border-radius: 8px; color: #304238; background: #fcfdfb; font: 11px 'DM Sans', sans-serif; outline: none; }
+.form-field input:focus { border-color: #78977b; box-shadow: 0 0 0 3px #e9f1e9; }
+.submit-button { height: 39px; padding: 0 15px; border: 0; border-radius: 8px; color: #fff; background: #527b5f; font: 700 10px 'DM Sans', sans-serif; cursor: pointer; }
+.submit-button:hover { background: #3f684c; }
+.form-error { margin: -5px 0 13px; color: #ae603e; font-size: 11px; }
 .footer { display: flex; justify-content: space-between; padding: 18px 2px 0; color: #9aa69d; font-size: 9px; }
 .footer span:first-child { color: #5e8266; font-weight: 700; }
 
@@ -117,6 +126,7 @@ h2 { margin: 0; font: 700 22px 'Manrope', sans-serif; letter-spacing: -.6px; }
   .stat-value { font-size: 22px; }
   .stat-note { line-height: 1.4; }
   .content-grid { grid-template-columns: 1fr; }
+  .add-form { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 420px) {
@@ -130,4 +140,5 @@ h2 { margin: 0; font: 700 22px 'Manrope', sans-serif; letter-spacing: -.6px; }
   h2 { font-size: 20px; }
   .panel { padding: 17px 14px; }
   .panel-heading h2 { font-size: 17px; }
+  .add-form { grid-template-columns: 1fr; }
 }

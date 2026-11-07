@@ -2,7 +2,9 @@
 
 module FreshStart.Domain
   ( ExpiryStatus (..)
+  , PantryItem (..)
   , Recipe (..)
+  , validatePantryItem
   , expiryStatus
   , expiryLabel
   , urgencyClass
@@ -15,6 +17,7 @@ import Data.List (sortOn)
 import Data.Ord (Down (..))
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Text.Read (readMaybe)
 
 data ExpiryStatus
   = Expired
@@ -32,6 +35,27 @@ data Recipe = Recipe
   , recipeStyle :: Text
   }
   deriving (Eq, Show)
+
+data PantryItem = PantryItem
+  { itemEmoji :: Text
+  , itemName :: Text
+  , itemAmount :: Text
+  , itemDaysLeft :: Int
+  }
+  deriving (Eq, Show)
+
+validatePantryItem :: Text -> Text -> Text -> Either Text PantryItem
+validatePantryItem rawName rawAmount rawDaysLeft
+  | Text.null name = Left "Enter an ingredient name."
+  | Text.null amount = Left "Enter the ingredient quantity."
+  | otherwise = case readMaybe (Text.unpack (Text.strip rawDaysLeft)) of
+      Nothing -> Left "Enter the number of days until the best-before date."
+      Just daysLeft
+        | daysLeft < 0 -> Left "Days until the best-before date cannot be negative."
+        | otherwise -> Right (PantryItem "🥗" name amount daysLeft)
+  where
+    name = Text.strip rawName
+    amount = Text.strip rawAmount
 
 expiryStatus :: Int -> ExpiryStatus
 expiryStatus daysLeft

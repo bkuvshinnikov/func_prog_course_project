@@ -2,21 +2,17 @@
 
 module Main where
 
+import Control.Monad.IO.Class (liftIO)
+import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import FreshStart.Domain
 import Lucid
-import Web.Scotty (file, get, html, scotty, setHeader)
+import Network.HTTP.Types.Status (status400)
+import Web.Scotty (file, formParam, get, html, post, redirect, scotty, setHeader, status)
 
-data PantryItem = PantryItem
-  { itemEmoji :: Text
-  , itemName :: Text
-  , itemAmount :: Text
-  , itemDaysLeft :: Int
-  }
-
-pantryItems :: [PantryItem]
-pantryItems =
+samplePantryItems :: [PantryItem]
+samplePantryItems =
   [ PantryItem "🥑" "Avocado" "2 pieces" 0
   , PantryItem "🥬" "Baby spinach" "120 g" 1
   , PantryItem "🍅" "Cherry tomatoes" "1 cup" 3
@@ -31,14 +27,30 @@ recipes =
   ]
 
 main :: IO ()
-main = scotty 3000 $ do
-  get "/" $ html (renderText homePage)
-  get "/style.css" $ do
-    setHeader "Content-Type" "text/css; charset=utf-8"
-    file "static/style.css"
+main = do
+  pantryRef <- newIORef samplePantryItems
+  scotty 3000 $ do
+    get "/" $ do
+      currentPantry <- liftIO (readIORef pantryRef)
+      html (renderText (homePage currentPantry Nothing))
+    post "/pantry" $ do
+      name <- formParam "name"
+      amount <- formParam "amount"
+      daysLeft <- formParam "daysLeft"
+      case validatePantryItem name amount daysLeft of
+        Left message -> do
+          currentPantry <- liftIO (readIORef pantryRef)
+          status status400
+          html (renderText (homePage currentPantry (Just message)))
+        Right item -> do
+          liftIO (modifyIORef' pantryRef (item :))
+          redirect "/"
+    get "/style.css" $ do
+      setHeader "Content-Type" "text/css; charset=utf-8"
+      file "static/style.css"
 
-homePage :: Html ()
-homePage = do
+homePage :: [PantryItem] -> Maybe Text -> Html ()
+homePage pantryItems formError = do
   doctype_
   html_ [lang_ "en"] $ do
     head_ $ do
@@ -84,7 +96,7 @@ homePage = do
           article_ [class_ "stat-card"] $ do
             div_ [class_ "stat-icon green-icon"] "⌂"
             p_ [class_ "stat-label"] "In your pantry"
-            p_ [class_ "stat-value"] "12"
+            p_ [class_ "stat-value"] (toHtml (Text.pack (show (length pantryItems))))
             p_ [class_ "stat-note"] "ingredients to explore"
           article_ [class_ "stat-card"] $ do
             div_ [class_ "stat-icon peach-icon"] "◷"
@@ -104,7 +116,8 @@ homePage = do
               div_ $ do
                 p_ [class_ "eyebrow dark-eyebrow"] "WHAT YOU HAVE"
                 h2_ "In your pantry"
-              a_ [class_ "text-link", href_ "#all-items"] "View all 12 →"
+              a_ [class_ "text-link", href_ "#pantry"] $
+                toHtml ("View all " <> Text.pack (show (length pantryItems)) <> " →")
             ul_ [class_ "pantry-list"] (mapM_ renderPantryItem pantryItems)
             a_ [class_ "add-link", href_ "#add-item"] $ do
               span_ [class_ "plus-icon"] "+"
@@ -120,6 +133,24 @@ homePage = do
             div_ [class_ "recipe-list"] $
               mapM_ (recipeCard availableIngredients) (rankRecipes availableIngredients recipes)
 
+        section_ [class_ "panel add-panel", id_ "add-item"] $ do
+          div_ [class_ "panel-heading"] $ do
+            div_ $ do
+              p_ [class_ "eyebrow dark-eyebrow"] "KEEP YOUR PANTRY UP TO DATE"
+              h2_ "Add an ingredient"
+          maybe mempty (\message -> p_ [class_ "form-error"] (toHtml message)) formError
+          form_ [class_ "add-form", method_ "post", action_ "/pantry"] $ do
+            div_ [class_ "form-field"] $ do
+              label_ [for_ "ingredient-name"] "Ingredient name"
+              input_ [id_ "ingredient-name", name_ "name", type_ "text", placeholder_ "e.g. Red bell pepper", required_ "required"]
+            div_ [class_ "form-field"] $ do
+              label_ [for_ "ingredient-amount"] "Quantity"
+              input_ [id_ "ingredient-amount", name_ "amount", type_ "text", placeholder_ "e.g. 2 pieces", required_ "required"]
+            div_ [class_ "form-field"] $ do
+              label_ [for_ "ingredient-days"] "Days until best before"
+              input_ [id_ "ingredient-days", name_ "daysLeft", type_ "number", min_ "0", placeholder_ "e.g. 4", required_ "required"]
+            button_ [class_ "submit-button", type_ "submit"] "Add to pantry"
+
         footer_ [class_ "footer"] $ do
           span_ "FreshStart"
           span_ "Small choices make a fresher kitchen."
@@ -133,11 +164,11 @@ renderPantryItem item =
       p_ [class_ "food-amount"] (toHtml (itemAmount item))
     div_ [class_ "expiry-info"] $ do
       span_
-        [class_ ("expiry-pill " <> urgencyClass status)]
+        [class_ ("expiry-pill " <> urgencyClass expiry)]
         (toHtml (expiryLabel (itemDaysLeft item)))
       span_ [class_ "expiry-caption"] "best before"
   where
-    status = expiryStatus (itemDaysLeft item)
+    expiry = expiryStatus (itemDaysLeft item)
 
 recipeCard :: [Text] -> Recipe -> Html ()
 recipeCard available recipe =

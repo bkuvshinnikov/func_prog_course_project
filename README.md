@@ -4,7 +4,7 @@ FreshStart helps people reduce household food waste by tracking pantry ingredien
 
 ## Current milestone
 
-The first milestones are a Haskell-served dashboard with sample pantry items, pure expiration-status calculations, and recipe suggestions ranked by ingredient matches. Data is still sample data; database persistence and interactive forms will be added in later steps.
+The current milestones include a Haskell-served dashboard, pure expiration-status calculations, recipe suggestions ranked by ingredient matches, and a validated form for adding pantry items. Added items currently live in memory and reset when the server restarts; MongoDB persistence is planned as a later step.
 
 ## Run locally
 
